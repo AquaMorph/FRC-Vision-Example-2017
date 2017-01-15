@@ -32,6 +32,8 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 	    camera = CameraServer.getInstance().startAutomaticCapture();
 	    camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
+	    camera.setWhiteBalanceManual(25);
+	    camera.setFPS(15);
 	    camera.setBrightness(0);
 	    camera.setExposureManual(0);
 	    
@@ -47,7 +49,7 @@ public class Robot extends IterativeRobot {
 	    });
 	    visionThread.start();
 	        
-	    drive = new RobotDrive(0, 1, 2, 3);
+	    drive = new RobotDrive(0, 3);
 	    drive.setSafetyEnabled(false);
 	    xboxController = new XboxController(0);
 	}
@@ -63,21 +65,36 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		
-		synchronized (imgLock) {
-			SmartDashboard.putNumber("Center X", centerX);
-			SmartDashboard.putNumber("Center Y", centerY);
-			SmartDashboard.putNumber("Area", targetArea);
-		}
-		
-		drive.arcadeDrive(xboxController.getY(Hand.kLeft), xboxController.getX(Hand.kLeft));
+			
+		drive(xboxController.getY(Hand.kLeft), xboxController.getX(Hand.kLeft));
 		
 		if(xboxController.getAButton()) {
-			camera.setExposureManual(25);
-			camera.setBrightness(25);
-		} else {
 			camera.setExposureManual(0);
 			camera.setBrightness(0);
+			
+			synchronized (imgLock) {
+				SmartDashboard.putNumber("Center X", centerX);
+				SmartDashboard.putNumber("Center Y", centerY);
+				SmartDashboard.putNumber("Area", targetArea);
+				
+				if(Math.abs(centerX) > 3) {
+					if(centerX > 0) {
+						drive(0, 1.0);
+					} else {
+						drive(0, -1.0);
+					}
+				}
+			}
+			
+		} else {
+			camera.setExposureManual(25);
+			camera.setBrightness(25);
 		}
+	}
+	
+	public void drive(double y, double x) {
+		double speed = 0.75;
+		drive.arcadeDrive(-y*speed, -x*speed);
 	}
 
 	@Override
