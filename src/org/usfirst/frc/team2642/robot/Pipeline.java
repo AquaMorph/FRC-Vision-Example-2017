@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.vision.VisionPipeline;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
+
 /**
 * Pipeline class.
 *
@@ -40,8 +41,8 @@ public class Pipeline implements VisionPipeline {
 
 		// Step HSV_Threshold0:
 		Mat hsvThresholdInput = cvResizeOutput;
-		double[] hsvThresholdHue = {77.6978417266187, 92.45733788395906};
-		double[] hsvThresholdSaturation = {165.10791366906474, 255.0};
+		double[] hsvThresholdHue = {17.805755395683452, 98.60068259385666};
+		double[] hsvThresholdSaturation = {167.4010791366906, 255.0};
 		double[] hsvThresholdValue = {61.915467625899275, 178.8481228668942};
 		hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
 

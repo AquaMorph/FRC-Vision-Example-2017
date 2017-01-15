@@ -7,29 +7,30 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 
 public class Robot extends IterativeRobot {
 	
-	private static final int IMG_WIDTH = 320;
-	private static final int IMG_HEIGHT = 240;
+	private static final int IMG_WIDTH = 160;
+	private static final int IMG_HEIGHT = 120;
 	
 	private VisionThread visionThread;
+	private UsbCamera camera;
 	private double centerX = 0.0;
+	private double centerY = 0.0;
+	private double targetArea = 0.0;
+	
 	private RobotDrive drive;
+	private XboxController xboxController;
 	
 	private final Object imgLock = new Object();
 	
-	final String defaultAuto = "Default";
-	final String customAuto = "My Auto";
-	String autoSelected;
-	SendableChooser<String> chooser = new SendableChooser<>();
-
 	@Override
 	public void robotInit() {
-	    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+	    camera = CameraServer.getInstance().startAutomaticCapture();
 	    camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
 	    camera.setBrightness(0);
 	    camera.setExposureManual(0);
@@ -39,12 +40,16 @@ public class Robot extends IterativeRobot {
 	            Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
 	            synchronized (imgLock) {
 	                centerX = r.x + (r.width / 2);
+	                centerY = r.y + (r.height / 2);
+	                targetArea = r.width * r.height;
 	            }
 	        }
 	    });
 	    visionThread.start();
 	        
-	    drive = new RobotDrive(1, 2);
+	    drive = new RobotDrive(0, 1, 2, 3);
+	    drive.setSafetyEnabled(false);
+	    xboxController = new XboxController(0);
 	}
 
 	@Override
@@ -53,18 +58,25 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void autonomousPeriodic() {
-		double centerX;
-		synchronized (imgLock) {
-			centerX = this.centerX;
-		}
-		double turn = centerX - (IMG_WIDTH / 2);
-		drive.arcadeDrive(-0.6, turn * 0.005);
 	}
 
 	@Override
 	public void teleopPeriodic() {
+		
 		synchronized (imgLock) {
 			SmartDashboard.putNumber("Center X", centerX);
+			SmartDashboard.putNumber("Center Y", centerY);
+			SmartDashboard.putNumber("Area", targetArea);
+		}
+		
+		drive.arcadeDrive(xboxController.getY(Hand.kLeft), xboxController.getX(Hand.kLeft));
+		
+		if(xboxController.getAButton()) {
+			camera.setExposureManual(25);
+			camera.setBrightness(25);
+		} else {
+			camera.setExposureManual(0);
+			camera.setBrightness(0);
 		}
 	}
 
