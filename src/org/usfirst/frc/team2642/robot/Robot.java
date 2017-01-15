@@ -17,7 +17,7 @@ public class Robot extends IterativeRobot {
 	private static final int IMG_WIDTH = 160;
 	private static final int IMG_HEIGHT = 120;
 	
-	private VisionThread visionThread;
+	private static VisionThread visionThread;
 	private UsbCamera camera;
 	private double centerX = 0.0;
 	private double centerY = 0.0;
@@ -39,9 +39,9 @@ public class Robot extends IterativeRobot {
 	        if (!pipeline.filterContoursOutput().isEmpty()) {
 	            Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
 	            synchronized (imgLock) {
-	                centerX = r.x + (r.width / 2);
-	                centerY = r.y + (r.height / 2);
-	                targetArea = r.width * r.height;
+	                centerX = 2*r.x + r.width - (IMG_WIDTH/2);
+	                centerY = 2*r.y + r.height - (IMG_HEIGHT/2);
+	                targetArea = r.area();
 	            }
 	        }
 	    });
